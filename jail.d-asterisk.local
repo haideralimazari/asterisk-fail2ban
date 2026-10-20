@@ -1,0 +1,41 @@
+# /etc/fail2ban/jail.d/asterisk.local
+
+[asterisk]
+enabled   = true
+filter    = asterisk
+logpath   = /var/log/asterisk/messages.log
+backend   = auto
+
+# Never ban your own networks / SIP providers / monitoring
+ignoreip  = 127.0.0.1/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16
+
+# A scanner hits maxretry within seconds; 3 is plenty
+maxretry  = 3
+findtime  = 10m
+bantime   = 7d
+
+# Escalate bans on repeat offenders
+bantime.increment = true
+bantime.factor    = 2
+bantime.maxtime   = 30d
+
+# Ban on all SIP ports (5060/5061 UDP)
+port      = 5060,5061
+protocol  = udp
+action    = iptables-multiport[name=asterisk, port="%(port)s", protocol="%(protocol)s"]
+
+
+# TCP as well (scanner INVITEs sometimes come over TCP)
+[asterisk-tcp]
+enabled   = true
+filter    = asterisk
+logpath   = /var/log/asterisk/messages.log
+backend   = auto
+ignoreip = 127.0.0.1/8 ::1 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 YOUR_HOME_IP YOUR_PROVIDER_IP
+maxretry  = 3
+findtime  = 10m
+bantime   = 7d
+bantime.increment = true
+port      = 5060,5061
+protocol  = tcp
+action    = iptables-multiport[name=asterisk-tcp, port="%(port)s", protocol="%(protocol)s"]

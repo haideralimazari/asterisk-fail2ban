@@ -1,0 +1,22 @@
+# /etc/fail2ban/filter.d/asterisk.local
+# Blocks SIP scanners, brute-forcers and malformed-packet probes on Asterisk PJSIP.
+# Tested against Asterisk 20.5.0 full log (messages.*).
+
+[INCLUDES]
+before = common.conf
+
+[Definition]
+_daemon = asterisk
+
+# Custom prefregex to match standard Asterisk log lines
+prefregex = ^\s*(?:NOTICE|WARNING|ERROR)\[\d+\]\s+(?:\[C-[\da-f]*\]\s+)?(?P<content>.+)$
+
+failregex = ^res_pjsip/pjsip_distributor\.c:\s+Request '(?:OPTIONS|INVITE|REGISTER)' from .* failed for '<HOST>:\d+' .* - (?:No matching endpoint found|Failed to authenticate)
+            ^pjproject:\s+.*Error processing \d+ bytes packet from UDP <HOST>:\d+
+            ^chan_sip\.c:\s+Registration from .* failed for '<HOST>:\d+' - (?:Wrong password|No matching peer found)
+
+ignoreregex =
+
+# Matches both [May  8 00:42:17] and [2026-10-19 19:12:00]
+datepattern = ^\[%%b %%d %%H:%%M:%%S\]
+              ^\[%%Y-%%m-%%d %%H:%%M:%%S\]
